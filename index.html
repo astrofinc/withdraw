@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Assets</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@solana/web3.js@1.93.2/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bignumber.js@9.1.2/bignumber.min.js" onload="
+        if (typeof BigNumber !== 'undefined') window.BigNumber = BigNumber;
+    "></script>
+    <script type="module">
+        import Decimal from 'https://esm.sh/decimal.js@10.4.3';
+        window.Decimal = Decimal;
+        window.dispatchEvent(new CustomEvent('decimalLoaded'));
+    </script>
+    <script type="module">
+        import bs58 from 'https://esm.sh/bs58@6.0.0';
+        window.bs58 = bs58;
+    </script>
+    <script type="module">
+        import { Buffer } from 'https://esm.sh/buffer@6.0.3';
+        window.Buffer = Buffer;
+        if (typeof globalThis !== 'undefined') globalThis.Buffer = Buffer;
+        if (typeof global !== 'undefined') global.Buffer = Buffer;
+        window.dispatchEvent(new CustomEvent('bufferLoaded'));
+    </script>
+    <script type="module">
+        import * as anchorModule from 'https://esm.sh/@coral-xyz/anchor@0.30.1';
+        window.anchor = anchorModule;
+        window.dispatchEvent(new CustomEvent('anchorLoaded'));
+    </script>
+    <script>
+        (function checkGlobals() {
+            const maxAttempts = 200;
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                if (typeof window.BigNumber !== 'undefined' && typeof window.Decimal !== 'undefined') {
+                    clearInterval(checkInterval);
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    console.error('Libraries failed to load after timeout');
+                } else {
+                    if (typeof window.BigNumber === 'undefined' && typeof BigNumber !== 'undefined') {
+                        window.BigNumber = BigNumber;
+                    }
+                    if (typeof window.Decimal === 'undefined' && typeof Decimal !== 'undefined') {
+                        window.Decimal = Decimal;
+                    }
+                }
+            }, 50);
+        })();
+    </script>
+</head>
+
+<body>
+    <div id="guideOverlay" class="guide-overlay">
+        <div class="guide-content">
+            <h2>Astrol Manage</h2>
+            <p>This tool allows you to withdraw your assets and repay your debts on Astrol.</p>
+            <div id="price-push-section" style="display: none;">
+                <p><strong>Important:</strong> Before anything, you need to push the price to the on-chain price account
+                    of the corresponding oracle. For <strong>tETH</strong>, the oracle is <strong>Switchboard</strong>.
+                    For all other assets, the oracle is <strong>Pyth</strong>.</p>
+
+                <div class="crank-steps">
+                    <p><strong>How to crank the feed:</strong></p>
+                    <ol>
+                        <li>Navigate to the oracle feed page:
+                            <ul style="margin-top: 8px; margin-bottom: 8px;">
+                                <li>For <strong>tETH</strong> (Switchboard): <a
+                                        href="https://ondemand.switchboard.xyz/eclipse/mainnet/feed/H61ZDM2i3SBAY1NcjKLdbDwpqR9WNYYzYqMiekiCXZW6"
+                                        target="_blank" style="color: #3b82f6; text-decoration: underline;">Switchboard
+                                        Feed</a></li>
+                            </ul>
+                        </li>
+                        <li>Click the <strong>"Crank Feed"</strong> button</li>
+                        <li>In the modal that appears, click <strong>"Submit"</strong></li>
+                    </ol>
+                    <p style="margin-top: 12px; margin-bottom: 0;"><strong>Note:</strong> After cranking the feed, you
+                        have a <strong>1 minute window</strong> to complete your withdrawal.</p>
+                </div>
+                <p style="text-align: center; color: #a3a3a3; font-size: 14px; margin-bottom: 8px;"><em>Example: tETH
+                        token using Switchboard oracle</em></p>
+                <img src="teth.png" alt="Crank Feed Modal for tETH (Switchboard)" class="guide-image">
+
+                <div class="crank-steps" style="margin-top: 30px;">
+                    <p><strong>For all other tokens (Pyth oracle):</strong></p>
+                    <ol>
+                        <li>First, install Docker Compose on your system. Follow the installation guide: <a
+                                href="https://docs.docker.com/compose/install/" target="_blank"
+                                style="color: #3b82f6; text-decoration: underline;">Docker Compose Installation
+                                Guide</a></li>
+                        <li>Download the following files and place them in the same directory:
+                            <ul style="margin-top: 8px; margin-bottom: 8px;">
+                                <li><a href="docker-compose.yml" download
+                                        style="color: #3b82f6; text-decoration: underline;"><code>docker-compose.yml</code></a>
+                                </li>
+                                <li><a href="price-config.yaml" download
+                                        style="color: #3b82f6; text-decoration: underline;"><code>price-config.yaml</code></a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>Go to <a href="https://solana-keypair-generator.web.app/" target="_blank"
+                                style="color: #3b82f6; text-decoration: underline;">https://solana-keypair-generator.web.app/</a>
+                            and:
+                            <ul style="margin-top: 8px; margin-bottom: 8px;">
+                                <li>Enter "a" in the prefix field</li>
+                                <li>Click the green button "Start generating keypairs"</li>
+                                <li>Once generation completes, click "Save private key to file"</li>
+                                <li>Save the file as <code>id.json</code> in the same directory as your downloaded files
+                                </li>
+                            </ul>
+                        </li>
+                        <li>Copy the wallet address shown after "Found keypair with public key:" and send <strong>0.0005
+                                ETH</strong> to that address</li>
+                        <li>Ensure all three files (<code>docker-compose.yml</code>, <code>price-config.yaml</code>, and
+                            <code>id.json</code>) are in the same directory</li>
+                        <li>Open a terminal. If you need help opening a terminal, see: <a
+                                href="https://www.wikihow.com/Open-a-Terminal-Window-in-Mac,-Linux,-or-Windows"
+                                target="_blank" style="color: #3b82f6; text-decoration: underline;">How to Open Terminal
+                                Guide</a></li>
+                        <li>Navigate to the directory containing the files and run:
+                            <pre
+                                style="background: #0a0a0a; padding: 12px; border-radius: 4px; margin: 8px 0; overflow-x: auto; color: #86efac; font-size: 14px;">docker-compose up</pre>
+                        </li>
+                        <li>You should see outputs similar to:
+                            <pre
+                                style="background: #0a0a0a; padding: 12px; border-radius: 4px; margin: 8px 0; overflow-x: auto; color: #86efac; font-size: 12px;">{"level":30,"time":1766522377317,"module":"Controller","priceIds":[...],"msg":"Some of the checks triggered pushing update. Will push the updates for some feeds."}
+Retrying transaction  0  of  5  with signature:  ...
+{"level":30,"time":1766522384815,"module":"SolanaPricePusher","signatures":[...],"msg":"updatePriceFeed successful"}</pre>
+                        </li>
+                        <li>Once you see the price push is successful, <strong>immediately</strong> use this web app to
+                            repay all and withdraw all</li>
+                        <li><strong>Important:</strong> Keep an eye on the ETH balance of the wallet used for price
+                            pushing. If you are too late, the price pusher may deplete the ETH. Monitor the balance and
+                            top it up if needed to ensure the price pusher continues to function.</li>
+                        <li>When done, you can close the terminal</li>
+                        <li>To reclaim any remaining ETH from the wallet used for price pushing:
+                            <ul style="margin-top: 8px; margin-bottom: 8px;">
+                                <li>Open the <code>id.json</code> file</li>
+                                <li>Copy the private key</li>
+                                <li>In Backpack wallet, use "Import from private key" to import the wallet</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <div
+                        style="background: #1e3a8a; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                        <p style="margin-top: 0; margin-bottom: 0; color: #93c5fd;"><strong>ℹ️ Important Note:</strong>
+                            You may need to do both price pushes (Switchboard AND Pyth) to finalize using the web app if
+                            you receive an error.</p>
+                    </div>
+                </div>
+            </div>
+
+            <p><strong>How to use:</strong></p>
+            <ul>
+                <li>Connect your Backpack wallet using the button below</li>
+                <li>Select the account you want to manage</li>
+                <li>View your deposits and debts for each supported asset</li>
+                <li><strong>First, repay all debts</strong> by clicking "Repay All" for any assets you owe</li>
+                <li>Then, click "Withdraw All" to withdraw your full deposit</li>
+            </ul>
+            <div class="crank-steps" style="background: #7f1d1d; border: 1px solid #dc2626;">
+                <p style="margin-top: 0;"><strong style="color: #fca5a5;">⚠️ Important: Repay Debts First</strong></p>
+                <p style="margin-bottom: 0; color: #fca5a5;">You must first repay all your debts before you can withdraw
+                    your deposits. Make sure to click "Repay All" for any assets you owe before attempting to withdraw.
+                </p>
+            </div>
+            <div class="crank-steps" style="background: #1e3a8a; border: 1px solid #3b82f6;">
+                <p style="margin-top: 0;"><strong style="color: #93c5fd;">ℹ️ Troubleshooting Errors</strong></p>
+                <p style="margin-bottom: 0; color: #93c5fd;">If you encounter errors while using this tool, please refer
+                    back to this guide to ensure you're following all steps correctly. If you're doing everything
+                    correctly and still experiencing issues, try again later as the issue may be temporary.</p>
+            </div>
+            <button class="guide-button" id="guideOkBtn">OK, Got it!</button>
+        </div>
+    </div>
+
+    <div id="mainContent" class="main-content">
+        <h1>Manage Assets</h1>
+
+        <div class="wallet-section">
+            <button id="connectBtn">Connect Backpack Wallet</button>
+            <div id="walletStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div id="accountSection" class="account-section" style="display: none;">
+            <select id="accountSelect"></select>
+            <div id="accountStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div id="banksSection" style="display: none;">
+            <div class="bank-list" id="bankList"></div>
+        </div>
+
+        <script src="app.js"></script>
+</body>
+
+</html>

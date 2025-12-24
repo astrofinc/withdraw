@@ -1,0 +1,29 @@
+- alias: SOL/USD
+  id: ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d
+  time_difference: 50
+  price_deviation: 2.0
+  confidence_ratio: 2
+
+- alias: USDC/USD
+  id: eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a
+  time_difference: 50
+  price_deviation: 5.0
+  confidence_ratio: 3
+
+- alias: ETH/USD
+  id: ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+  time_difference: 50
+  price_deviation: 2.0
+  confidence_ratio: 2
+
+- alias: TIA/USD
+  id: 09f7c1d7dfbb7df2b8fe3d3d87ee94a2259d212da4f30c1f0540d066dfa44723
+  time_difference: 50
+  price_deviation: 4.0
+  confidence_ratio: 2
+
+- alias: ES/USD
+  id: 3b08cf7f0d8e30c5e42b505bc606c64ca64eb1f40126f310e169e3aba1fa4595
+  time_difference: 50
+  price_deviation: 8.0
+  confidence_ratio: 2

@@ -1,0 +1,31 @@
+services:
+  price-pusher:
+    image: 'public.ecr.aws/pyth-network/xc-price-pusher:v10.3.1'
+    container_name: eclipse-pyth-pusher
+    command:
+      - npm
+      - run
+      - start
+      - '--'
+      - solana
+      - '--endpoint'
+      - 'https://eclipse.lgns.net/'
+      - '--shard-id'
+      - '0'
+      - '--keypair-file'
+      - /keypair
+      - '--pyth-contract-address'
+      - pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT
+      - '--price-service-endpoint'
+      - 'https://hermes.pyth.network'
+      - '--price-config-file'
+      - /price_config
+      - pushing-frequency
+      - '10'
+      - polling-frequency
+      - '5'
+      - '--compute-unit-price-micro-lamports'
+      - '0'
+    volumes:
+      - './id.json:/keypair'
+      - './price-config.yaml:/price_config'
