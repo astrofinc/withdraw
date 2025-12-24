@@ -238,7 +238,7 @@ async function loadAccounts() {
         accounts.forEach((acc, idx) => {
             const option = document.createElement('option');
             option.value = idx;
-            option.textContent = `Account ${idx + 1}: ${acc.address.toBase58().slice(0, 8)}...`;
+            option.textContent = `Account ${idx + 1}: ${acc.address.toBase58()}...`;
             select.appendChild(option);
         });
 
